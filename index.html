@@ -12,31 +12,31 @@
 		<div class="small-6 columns">
 			<h1 class="text-center">YOU</h1>
 			<div class="healthbar">
-				<div class="healthbar text-center" style="background-color: green; margin: 0; color: white;" :style="{'width': playerHP + '%', 'background-color': healthState(playerHP)}">
-				{{ playerHP }}
+				<div class="healthbar text-center" style="background-color: green; margin: 0; color: white;" :style="{'width': player.hp + '%', 'background-color': healthState(player.hp)}">
+				{{ player.hp }}
 				</div>
 			</div>
 		</div>
 		<div class="small-6 columns">
 			<h1 class="text-center">MONSTER</h1>
 			<div class="healthbar">
-				<div class="healthbar text-center" style="background-color: green; margin: 0; color: white;" :style="{'width': monsterHP + '%', 'background-color': healthState(monsterHP)}">
-				{{ monsterHP }}
+				<div class="healthbar text-center" style="background-color: green; margin: 0; color: white;" :style="{'width': monster.hp + '%', 'background-color': healthState(monster.hp)}">
+				{{ monster.hp }}
 				</div>
 			</div>
 		</div>
 	</section>
-	<section class="row controls">
+	<section class="row controls" v-if="gameOver">
 		<div class="small-12 columns">
 			<button id="start-game" @click="reset">START NEW GAME</button>
 		</div>
 	</section>
 	<section class="row controls" v-if="!gameOver">
 		<div class="small-12 columns">
-			<button @click="playerAttack" id="attack">ATTACK</button>
-			<button @click="specialAttack" id="special-attack">SPECIAL ATTACK</button>
-			<button @click="heal" id="heal">HEAL</button>
-			<button @click="quit" id="give-up">GIVE UP</button>
+			<button @click="playerTurn('attack')" id="attack">ATTACK</button>
+			<button @click="playerTurn('special')" id="special-attack">SPECIAL ATTACK</button>
+			<button @click="playerTurn('heal')" id="heal">HEAL</button>
+			<button @click="playerTurn('quit')" id="give-up">GIVE UP</button>
 		</div>
 	</section>
 	<section class="row log" v-if="log.length">

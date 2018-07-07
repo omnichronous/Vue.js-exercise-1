@@ -1,65 +1,93 @@
 new Vue({
   el: '#app',
   data: {
-    playerHP: 100,
-    monsterHP: 100,
     gameOver: false,
+    player: {
+      hp: 100,
+      messages: {
+        attack: 'Player hit monster for <points> damage',
+        special: 'Player devastated monster with <points> damage',
+        heal: {
+          success: 'Player healed <points> HP',
+          fail: 'Player tried to heal above full health'
+        },
+        win: 'You win! Play again?',
+        quit: {
+          prompt: 'Run away to fight another day?',
+          cancel: 'Player hesitated'
+        }
+      }
+    },
+    monster: {
+      hp: 100,
+      messages: {
+        attack: 'Monster hit player for <points> damage',
+        win: 'You lose! Play again?'
+      }
+    },
     round: 0,
     log: []
   },
-  watch: {
-    playerHP: function(e) {
-      if (e <= 0) {
-        this.gameOver = true;
-        if (confirm('You lose! Play again?')) {
-          this.reset();
-        }
-      } else if (e > 100) {
-        this.playerHP = 100;
-      }
-    },
-    monsterHP: function(e) {
-      if (e <= 0) {
-        this.gameOver = true;
-        if (confirm('You win! Play again?')) {
-          this.reset();
-        }
-      }
-    }
-  },
   methods: {
-    playerAttack: function() {
-      var points = getRandomInt(1, 10);
-      this.monsterHP -= points;
-      this.log[this.round] = {};
-      this.log[this.round].playerAction = 'Player hit monster for ' + points + ' damage';
-      this.monsterAttack();
-      this.round++;
-    },
-    specialAttack: function() {
-      var points = getRandomInt(10, 20);
-      this.monsterHP -= points;
-      this.log[this.round] = {};
-      this.log[this.round].playerAction = 'Player devastated monster with ' + points + ' damage';
-      this.monsterAttack();
-      this.round++;
-    },
-    monsterAttack: function() {
-      var points = getRandomInt(1, 10);
-      this.playerHP -= points;
-      this.log[this.round].monsterAction = 'Monster hit player for ' + points + ' damage';
-    },
-    heal: function() {
-      var points = getRandomInt(1, 10);
-      this.log[this.round] = {};
-      if (this.playerHP >= 100) {
-        this.log[this.round].playerAction = 'Player tried to heal above full health';
-      } else {
-        this.playerHP += points;
-        this.log[this.round].playerAction = 'Player healed ' + points + ' HP';
+    playerTurn: function(action) {
+      var outcome;
+      var playerRoll = getRandomInt(1, 10);
+      var monsterRoll = getRandomInt(1, 10);
+      var specialAttackBonus = 10;
+      var playerActionMessage;
+      var monsterActionMessage = this.monster.messages.attack.replace('<points>', monsterRoll);
+      switch (true) {
+        case action == 'attack':
+          this.monster.hp -= playerRoll;
+          break;
+        case action == 'special':
+          this.monster.hp -= playerRoll += specialAttackBonus;
+          break;
+        case action == 'heal':
+          if (this.player.hp < 100) {
+            this.player.hp += playerRoll;
+            outcome = 'success';
+          } else {
+            outcome = 'fail';
+          }
+          break;
+        case action == 'quit':
+          if (confirm(this.player.messages[action].prompt)) {
+            this.player.hp = 0;
+            this.gameOver = true;
+            return;
+          } else {
+            outcome = 'cancel';
+            break;
+          }
       }
-      this.monsterAttack();
-      this.round++;
+      if (this.monster.hp > 0) {
+        this.player.hp -= monsterRoll;
+        if (this.player.hp <= 0) {
+          if (confirm(this.monster.messages.win)) {
+            this.reset();
+          } else {
+            this.player.hp = 0;
+            this.gameOver = true;
+          }
+        }
+        this.log[this.round] = {};
+        if (outcome) {
+          playerActionMessage = this.player.messages[action][outcome].replace('<points>', playerRoll);
+        } else {
+          playerActionMessage = this.player.messages[action].replace('<points>', playerRoll);
+        }
+        this.log[this.round].playerAction = playerActionMessage;
+        this.log[this.round].monsterAction = monsterActionMessage;
+        this.round++;
+      } else {
+        if (confirm(this.player.messages.win)) {
+          this.reset();
+        } else {
+          this.monster.hp = 0;
+          this.gameOver = true;
+        }
+      }
     },
     healthState: function(hp) {
       var color;
@@ -70,17 +98,12 @@ new Vue({
       }
       return color;
     },
-    quit: function() {
-      this.playerHP = 0;
-      this.round = 0;
-      this.log = [];
-    },
     reset: function() {
       this.gameOver = false;
       this.round = 0;
       this.log = [];
-      this.playerHP = 100;
-      this.monsterHP = 100;
+      this.player.hp = 100;
+      this.monster.hp = 100;
     }
   }
 });
